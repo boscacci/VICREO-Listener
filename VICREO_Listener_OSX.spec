@@ -4,9 +4,9 @@ block_cipher = None
 
 
 a = Analysis(['VICREO_Listener_OSX.py'],
-             pathex=['/Users/jeffreydavidsz/VICREO-Listener'],
+             pathex=['/Users/rob/Documents/VICREO-Listener'],
              binaries=[],
-             datas=[('icon.icns','/Users/jeffreydavidsz/VICREO-Listener/icon.icns')],
+             datas=[('icon.icns','/Users/rob/Documents/VICREO-Listener/icon.icns')],
              hiddenimports=['rumps','pynput.keyboard','psutil'],
              hookspath=[],
              runtime_hooks=[],
@@ -32,7 +32,7 @@ exe = EXE(pyz,
           console=False)
 app = BUNDLE(exe,
              name='VICREO Listener.app',
-             icon='/Users/jeffreydavidsz/VICREO-Listener/icon.icns',
+             icon='/Users/rob/Documents/VICREO-Listener/icon.icns',
              bundle_identifier=None,
              info_plist={
                 'LSUIElement': 'True',
