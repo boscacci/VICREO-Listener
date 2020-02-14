@@ -5,3 +5,4 @@ __pycache__
 VICREO_Client.py
 VICREO_stop_listener.py
 *.bat
+.vscode/settings.json
