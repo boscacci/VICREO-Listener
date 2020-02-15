@@ -21,6 +21,8 @@ On linux listener (receiving commands):
 * Download this code repo (and unzip if necessary).
 * Navigate into the folder containing this code, in the terminal. Run these commands:
 * `$ pipenv install -r requirements.txt`
+* `$ pipenv shell`
+* `$ python vicreo_listener_linux.py`
 
 On client machine (the one you are sending commands from):
 * Connect to the same local network as listener machine
@@ -28,15 +30,6 @@ On client machine (the one you are sending commands from):
 * Before clicking "launch GUI": Choose LAN port instead of localhost (perhaps "en0:...")
 * In companion GUI, under connections/instances, add vicreo hotkey instance
 * In instance config, set IP address to match vicreo listener IP ("Listening ... at xxx.xxx.xxx.xxx)
-
-## Usage
-
-In the linux terminal, navigate to vicreo listener code folder and type:
-* `$ pipenv shell`
-* `$ python vicreo_listener_linux.py`
-to launch listener.
-
-Enter ip address in companion vicreo config. You should be set.
 
 ## Modifiers ##
 
