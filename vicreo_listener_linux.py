@@ -6,14 +6,9 @@ import sys
 import os
 import subprocess
 
-# RUMPS for menu
-# import rumps
 import time
 
-# Quartz, objc, psutil - are used for sending MacOS Keyboard Events to specific processes
-# import Quartz
-# import objc
-import psutil
+from threading import Thread
 
 # keyboard
 from pynput.keyboard import Key, Controller
@@ -34,75 +29,8 @@ def resource_path(relative_path):
 
 Logo = resource_path("icon.icns")
 
-# rumps.debug_mode(False) # turn on command line logging information for development - default is off
-
-from threading import Thread
-
-# def myRumps():
-# 	@rumps.clicked("About")
-# 	def about(sender):
-# 		rumps.alert("Welcome at the VICREO Listener v1.4.0")
-
-# 	@rumps.clicked("Quit app")
-# 	def quit(sender):
-# 		global _LOOP
-# 		_LOOP = False
-# 		print("Quit from menu")
-# 		rumps.quit_application()
-
-# 	@rumps.notifications
-# 	def notifications(notification):  # function that reacts to incoming notification dicts
-# 		print(notification)
-
-
-# 	def onebitcallback(sender):  # functions don't have to be decorated to serve as callbacks for buttons
-# 		print(4848484) # this function is specified as a callback when creating a MenuItem below
-
-# 	app = rumps.App("VICREO Listener", title='VICREO')
-# 	app.menu = [
-# 		rumps.MenuItem('About', icon=Logo, dimensions=(18, 18)),  # can specify an icon to be placed near text
-# 		None,
-# 		rumps.MenuItem('Quit app')
-# 	]
-# 	app.quit_button = None
-# 	app.run()
-
 
 def myListener():
-    def sendKeyboardEventToProcessByName(
-        keycode, process_name_search_string, modifier1, modifier2
-    ):
-        pid = -1
-        import pdb; pdb.set_trace()
-        for proc in psutil.process_iter(attrs=["pid", "name"]):
-            if process_name_search_string.lower() in proc.info["name"].lower():
-                pid = proc.info["pid"]
-                print("got process", pid)
-        if pid > 0:
-            import pdb;pdb.set_trace()
-            event_flags = 0
-            if modifier1 == "shift" or modifier2 == "shift":
-                event_flags += Quartz.kCGEventFlagMaskShift
-            if modifier1 == "alt" or modifier2 == "alt":
-                event_flags += Quartz.kCGEventFlagMaskAlternate
-            if modifier1 == "ctrl" or modifier2 == "ctrl":
-                event_flags += Quartz.kCGEventFlagMaskControl
-            if modifier1 == "cmd" or modifier2 == "cmd":
-                event_flags += Quartz.kCGEventFlagMaskCommand
-
-            keyDownEvent = Quartz.CGEventCreateKeyboardEvent(
-                objc.NULL, keycode, True
-            )
-            keyUpEvent = Quartz.CGEventCreateKeyboardEvent(
-                objc.NULL, keycode, False
-            )
-            if event_flags > 0:
-                Quartz.CGEventSetFlags(keyDownEvent, event_flags)
-                Quartz.CGEventSetFlags(keyUpEvent, event_flags)
-            Quartz.CGEventPostToPid(pid, keyDownEvent)
-            # TODO: consider a time.sleep(0.01) here
-            Quartz.CGEventPostToPid(pid, keyUpEvent)
-
     def pressAndRelease(key):
         keyboard.press(key)
         keyboard.release(key)
@@ -161,10 +89,21 @@ def myListener():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Bind the socket to the port
     server_address = ("", 10001)
-    print("Listening to port 10001")
-    sock.bind(server_address)
+    from subprocess import check_output
+
+    host_ip = check_output(["hostname", "-I"]).decode().strip(" \n")
+
     # Listen for incoming connections
+    print("Waiting for socket to free up...")
+    while True:
+        try:
+            sock.bind(server_address)
+        except OSError:
+            continue
+        break
+
     sock.listen(1)
+    print("Listening to port 10001 at", host_ip)
 
     # Start main function
     while _LOOP:
@@ -198,40 +137,6 @@ def myListener():
                             pressAndRelease(specialKey)
                         else:
                             print("wrong key")
-                    # Keyboard Event to process (looks for first process containing processSearchString)
-                    # TODO: consider separate events for down and up???
-                    elif (
-                        tcpString[0:5] == "<SKE>"
-                        and tcpString.find("<PROCESS>") > 5
-                        and tcpString.find("<AND>") > 14
-                        and tcpString.find("<AND2>") > 19
-                    ):  # make sure command is complete with all four parts (VirtualKeyCode, ProcessSearchString, Modifier1, Modifier2)
-                        keyCode = int(
-                            tcpString[5 : tcpString.index("<PROCESS>")], 0
-                        )  # using base 0 will invoke base automatic "guessing" - (0x prefix will be assumed hex, otherwise just digits will be assumed base 10.)
-                        processSearchString = tcpString[
-                            tcpString.index("<PROCESS>")
-                            + 9 : tcpString.index("<AND>")
-                        ].rstrip()
-                        modifier1 = tcpString[
-                            tcpString.index("<AND>")
-                            + 5 : tcpString.index("<AND2>")
-                        ]
-                        modifier2 = tcpString[
-                            tcpString.index("<AND2>") + 6 :
-                        ].rstrip()
-                        print(
-                            keyCode, processSearchString, modifier1, modifier2
-                        )
-                        if keyCode >= 0 and keyCode <= 128:
-                            sendKeyboardEventToProcessByName(
-                                keyCode,
-                                processSearchString,
-                                modifier1,
-                                modifier2,
-                            )
-                        else:
-                            print("Invalid keycode")
                     # combination of two keys
                     elif tcpString[0:8] == "<KCOMBO>":
                         # find first command
@@ -346,10 +251,8 @@ def myListener():
 if __name__ == "__main__":
     # Put the listener in a Thread so we can do other stuff
     t2 = Thread(target=myListener)
-    t2.setDaemon(True)
+    # t2.setDaemon(True)
     t2.start()
-    # Start the GUI part
-    # myRumps()
     while True:
         pass
 
