@@ -13,6 +13,8 @@ from threading import Thread
 # keyboard
 from pynput.keyboard import Key, Controller
 
+OPEN_FILE_RUNS_SCRIPT = False
+
 keyboard = Controller()
 
 
@@ -82,7 +84,10 @@ def myListener():
     _LOOP = True
 
     def openFile(path):
-        opener = "open" if sys.platform == "darwin" else "xdg-open"
+        if OPEN_FILE_RUNS_SCRIPT:
+            opener = "sh"
+        else:
+            opener = "open" if sys.platform == "darwin" else "xdg-open"
         subprocess.call([opener, path])
 
     # Create a TCP/IP socket
